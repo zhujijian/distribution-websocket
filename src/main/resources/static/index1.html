@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Welcome</title>
+</head>
+<body>
+<h1>Welcome to homepage!</h1>
+<p>Online Users: <b id="online-users">0</b></p>
+</body>
+<script src="https://cdn.bootcss.com/sockjs-client/1.1.4/sockjs.min.js"></script>
+<script src="https://cdn.bootcss.com/stomp.js/2.3.3/stomp.min.js"></script>
+<script type="text/javascript">
+    function init(){
+        connect(1);
+    }
+    init();
+    function connect(empNo) {
+        var socket = new SockJS('http://localhost:8080/webSocketServer'); //1
+        var stompClient = Stomp.over(socket);
+        stompClient.connect({empNo: empNo}, function (frame) {
+            console.log('Connected: ' + frame);
+            stompClient.subscribe('/topic/getResponse', function (response) { //2
+                var elem = document.getElementById("online-users");
+                elem.textContent = response.body;
+            });
+
+            // 刚连接的时候执行，初始化数据，只执行一次
+            stompClient.subscribe('/app/welcome', function (response) {
+                var elem = document.getElementById("online-users");
+                elem.textContent = response.body;
+            });
+        });
+
+        //监听窗口关闭
+        window.onbeforeunload = function (event) {
+            socket.close()
+        }
+    }
+</script>
+</html>
